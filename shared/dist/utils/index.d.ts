@@ -1,0 +1,32 @@
+import { PaymentProvider } from '../types';
+export declare const formatCurrency: (amount: number, currency: string) => string;
+export declare const getCurrencySymbol: (currency: string) => string;
+export declare const parseCurrencyAmount: (input: string) => number;
+export declare const validateEmail: (email: string) => boolean;
+export declare const validatePhoneNumber: (phoneNumber: string, countryCode: string) => boolean;
+export declare const validateAccountNumber: (accountNumber: string, provider: PaymentProvider) => boolean;
+export declare const generateId: () => string;
+export declare const generateTransactionId: () => string;
+export declare const generateQRCode: (data: any) => string;
+export declare const formatDate: (date: Date, format?: "short" | "long" | "time") => string;
+export declare const isBusinessHours: (date?: Date) => boolean;
+export declare const addBusinessDays: (date: Date, days: number) => Date;
+export declare const delay: (ms: number) => Promise<void>;
+export declare const retry: <T>(operation: () => Promise<T>, maxRetries?: number, delayMs?: number) => Promise<T>;
+export declare const timeout: <T>(promise: Promise<T>, ms: number) => Promise<T>;
+export declare const maskAccountNumber: (accountNumber: string) => string;
+export declare const maskEmail: (email: string) => string;
+export declare const generateOTP: (length?: number) => string;
+export declare const groupBy: <T, K extends keyof any>(array: T[], getKey: (item: T) => K) => Record<K, T[]>;
+export declare const sortBy: <T>(array: T[], getKey: (item: T) => string | number, direction?: "asc" | "desc") => T[];
+export declare const chunk: <T>(array: T[], size: number) => T[][];
+export declare const isDevelopment: () => boolean;
+export declare const isProduction: () => boolean;
+export declare const getEnvironmentVariable: (key: string, defaultValue?: string) => string;
+export declare const createLogger: (context: string) => {
+    info: (message: string, data?: any) => void;
+    warn: (message: string, data?: any) => void;
+    error: (message: string, error?: any) => void;
+    debug: (message: string, data?: any) => void;
+};
+//# sourceMappingURL=index.d.ts.map

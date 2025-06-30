@@ -1,0 +1,2 @@
+This is a placeholder file to ensure the assets directory exists.
+The actual image files (icon.png, splash.png, etc.) should be added here. 

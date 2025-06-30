@@ -1,0 +1,343 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  phoneNumber       String    @unique
+  firstName         String
+  lastName          String
+  countryCode       String
+  preferredCurrency String    @default("MYR")
+  passwordHash      String
+  isEmailVerified   Boolean   @default(false)
+  isPhoneVerified   Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  profile           UserProfile?
+  linkedAccounts    LinkedAccount[]
+  routingRules      RoutingRule[]
+  paymentRequests   PaymentRequest[]
+  transactions      PaymentTransaction[]
+  sessions          UserSession[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  avatarUrl    String?
+  dateOfBirth  DateTime?
+  street       String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?
+  kycStatus    KYCStatus  @default(PENDING)
+  riskProfile  RiskProfile @default(LOW)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model LinkedAccount {
+  id            String          @id @default(cuid())
+  userId        String
+  accountType   AccountType
+  provider      PaymentProvider
+  accountNumber String
+  accountName   String
+  currency      String
+  balance       Float?
+  isActive      Boolean         @default(true)
+  isPrimary     Boolean         @default(false)
+  priority      Int             @default(1)
+  dailyLimit    Float?
+  monthlyLimit  Float?
+  linkedAt      DateTime        @default(now())
+  lastSyncAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceTransactions PaymentTransaction[] @relation("SourceAccount")
+  targetTransactions PaymentTransaction[] @relation("TargetAccount")
+
+  @@unique([userId, provider, accountNumber])
+  @@map("linked_accounts")
+}
+
+model PaymentRequest {
+  id             String    @id @default(cuid())
+  userId         String
+  amount         Float
+  currency       String
+  targetCurrency String?
+  merchantId     String?
+  merchantName   String?
+  description    String?
+  qrCode         String?
+  metadata       Json?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   PaymentTransaction[]
+
+  @@map("payment_requests")
+}
+
+model PaymentTransaction {
+  id                String            @id @default(cuid())
+  userId            String
+  paymentRequestId  String?
+  amount            Float
+  currency          String
+  targetAmount      Float?
+  targetCurrency    String?
+  exchangeRate      Float?
+  sourceAccountId   String
+  targetAccountId   String?
+  status            TransactionStatus @default(PENDING)
+  failureReason     String?
+  merchantName      String?
+  merchantCategory  String?
+  merchantLocation  String?
+  metadata          Json?
+  initiatedAt       DateTime          @default(now())
+  completedAt       DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentRequest    PaymentRequest?   @relation(fields: [paymentRequestId], references: [id])
+  sourceAccount     LinkedAccount     @relation("SourceAccount", fields: [sourceAccountId], references: [id])
+  targetAccount     LinkedAccount?    @relation("TargetAccount", fields: [targetAccountId], references: [id])
+  routingSteps      RoutingStep[]
+  fees              TransactionFee[]
+
+  @@map("payment_transactions")
+}
+
+model RoutingStep {
+  id                    String         @id @default(cuid())
+  transactionId         String
+  stepNumber            Int
+  provider              PaymentProvider
+  action                RoutingAction
+  amount                Float
+  currency              String
+  status                StepStatus     @default(PENDING)
+  processingTime        Int?           // milliseconds
+  externalTransactionId String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  // Relations
+  transaction           PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  fees                  RoutingStepFee[]
+
+  @@unique([transactionId, stepNumber])
+  @@map("routing_steps")
+}
+
+model TransactionFee {
+  id            String   @id @default(cuid())
+  transactionId String
+  type          FeeType
+  amount        Float
+  currency      String
+  description   String
+  createdAt     DateTime @default(now())
+
+  // Relations
+  transaction   PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@map("transaction_fees")
+}
+
+model RoutingStepFee {
+  id            String      @id @default(cuid())
+  routingStepId String
+  type          FeeType
+  amount        Float
+  currency      String
+  description   String
+  createdAt     DateTime    @default(now())
+
+  // Relations
+  routingStep   RoutingStep @relation(fields: [routingStepId], references: [id], onDelete: Cascade)
+
+  @@map("routing_step_fees")
+}
+
+model RoutingRule {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  conditions  Json      // Array of RoutingCondition
+  actions     Json      // Array of RoutingRuleAction
+  priority    Int       @default(1)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("routing_rules")
+}
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Float
+  provider     String
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@unique([fromCurrency, toCurrency, provider, timestamp])
+  @@map("exchange_rates")
+}
+
+model PaymentNetworkStatus {
+  id                 String          @id @default(cuid())
+  provider           PaymentProvider @unique
+  isOnline           Boolean         @default(true)
+  responseTime       Int             @default(0) // milliseconds
+  lastChecked        DateTime        @default(now())
+  maintenanceStart   DateTime?
+  maintenanceEnd     DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("payment_network_status")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  deviceInfo   Json?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum RiskProfile {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AccountType {
+  BANK_ACCOUNT
+  EWALLET
+  CREDIT_CARD
+  DEBIT_CARD
+  CRYPTO_WALLET
+}
+
+enum PaymentProvider {
+  // Malaysian Banks
+  MAYBANK
+  CIMB
+  PUBLIC_BANK
+  RHB
+  HONG_LEONG
+  
+  // Malaysian E-Wallets
+  TOUCH_N_GO
+  GRABPAY
+  BOOST
+  SHOPEE_PAY
+  
+  // Regional
+  PROMPTPAY    // Thailand
+  PAYNOW       // Singapore
+  QRIS         // Indonesia
+  
+  // International
+  PAYPAL
+  WISE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum RoutingAction {
+  DEBIT
+  CREDIT
+  CONVERT
+  ROUTE
+}
+
+enum StepStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum FeeType {
+  PROCESSING
+  FOREIGN_EXCHANGE
+  NETWORK
+  CROSS_BORDER
+} 
