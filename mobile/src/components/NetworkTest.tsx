@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-const API_BASE_URL = 'http://192.168.0.34:3000/api';
+const API_BASE_URL = 'http://192.168.8.120:3000/api';
 
 export const NetworkTest: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);

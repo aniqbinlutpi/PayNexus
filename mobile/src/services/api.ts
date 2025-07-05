@@ -2,7 +2,7 @@ import { useAuthStore } from '../stores/authStore';
 
 // Use your computer's IP address instead of localhost for mobile testing
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.34:3000/api'
+  ? 'http://192.168.8.120:3000/api'
   : 'https://your-production-api.com/api';
 
 class ApiService {
@@ -120,4 +120,81 @@ class ApiService {
   }
 }
 
-export const apiService = new ApiService(); 
+export const apiService = new ApiService();
+
+// Add new Payments without Borders API methods
+class PaymentsWithoutBordersApi extends ApiService {
+  // Unified Payment Rail APIs
+  async getUnifiedBalanceView() {
+    const response = await this.makeRequest('/openfinance/balance-view');
+    return response.data;
+  }
+
+  async getSmartPaymentSuggestions(context: {
+    amount: number;
+    currency: string;
+    recipientCountry: string;
+    urgency: string;
+  }) {
+    const response = await this.makeRequest('/openfinance/payment-suggestions', {
+      method: 'POST',
+      body: JSON.stringify(context),
+    });
+    return response.data;
+  }
+
+  async getNetworkStatus() {
+    const response = await this.makeRequest('/network/status');
+    return response.data;
+  }
+
+  async getPaymentRoutes(params: {
+    amount: number;
+    fromCurrency: string;
+    toCurrency: string;
+    country: string;
+  }) {
+    const response = await this.makeRequest('/payments/routes', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    return response.data;
+  }
+
+  async getRegionalNetworkStats() {
+    const response = await this.makeRequest('/network/regional-stats');
+    return response.data;
+  }
+
+  async processSmartPayment(paymentData: {
+    recipientId: string;
+    amount: number;
+    currency: string;
+    sourceAccountId: string;
+    targetAccountId: string;
+    useSmartRouting: boolean;
+    description?: string;
+  }) {
+    const response = await this.makeRequest('/payments/smart-transfer', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+    return response.data;
+  }
+
+  // Fraud Detection & Security
+  async getBiometricAuthStatus() {
+    const response = await this.makeRequest('/security/biometric-status');
+    return response.data;
+  }
+
+  async performBiometricAuth(authData: any) {
+    const response = await this.makeRequest('/security/biometric-auth', {
+      method: 'POST',
+      body: JSON.stringify(authData),
+    });
+    return response.data;
+  }
+}
+
+export const paymentsApi = new PaymentsWithoutBordersApi(); 

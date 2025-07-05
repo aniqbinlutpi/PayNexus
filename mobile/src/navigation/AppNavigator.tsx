@@ -10,6 +10,7 @@ import { DashboardScreen } from '../screens/main/DashboardScreen';
 import { PaymentScreen } from '../screens/main/PaymentScreen';
 import { TransactionsScreen } from '../screens/main/TransactionsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
+import { SmartPaymentsScreen } from '../screens/main/SmartPaymentsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,6 +32,8 @@ const MainTabs = () => (
 
         if (route.name === 'Dashboard') {
           iconName = focused ? 'home' : 'home-outline';
+        } else if (route.name === 'Smart') {
+          iconName = focused ? 'flash' : 'flash-outline';
         } else if (route.name === 'Payment') {
           iconName = focused ? 'card' : 'card-outline';
         } else if (route.name === 'Transactions') {
@@ -48,6 +51,11 @@ const MainTabs = () => (
     })}
   >
     <Tab.Screen name="Dashboard" component={DashboardScreen} />
+    <Tab.Screen 
+      name="Smart" 
+      component={SmartPaymentsScreen} 
+      options={{ title: 'Smart Payments' }}
+    />
     <Tab.Screen name="Payment" component={PaymentScreen} />
     <Tab.Screen name="Transactions" component={TransactionsScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />

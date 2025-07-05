@@ -4,14 +4,34 @@ services:
     container_name: paynexus-postgres
     environment:
       POSTGRES_DB: paynexus
-      POSTGRES_USER: paynexus
-      POSTGRES_PASSWORD: paynexus123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U paynexus"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: paynexus-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@paynexus.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/misc/ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,4 +51,5 @@ services:
 
 volumes:
   postgres_data:
+  pgadmin_data:
   redis_data: 

@@ -28,7 +28,7 @@ interface AuthState {
 
 // Use your computer's IP address instead of localhost for mobile testing
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.34:3000/api'  // Your actual IP
+  ? 'http://192.168.8.120:3000/api'  // Your actual IP
   : 'https://your-production-api.com/api';
 
 export const useAuthStore = create<AuthState>((set, get) => ({

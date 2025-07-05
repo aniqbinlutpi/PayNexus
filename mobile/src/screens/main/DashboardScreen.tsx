@@ -110,6 +110,10 @@ export const DashboardScreen: React.FC = () => {
     Alert.alert('Top Up', 'Account top-up feature - Coming in next update!');
   };
 
+  const handleSmartPayments = () => {
+    navigation.navigate('Smart' as never);
+  };
+
   const formatCurrency = (amount: number, currency: string) => {
     const symbols: { [key: string]: string } = {
       'MYR': 'RM',
@@ -205,9 +209,9 @@ export const DashboardScreen: React.FC = () => {
             <Text style={styles.actionText}>Scan QR</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton} onPress={handlePayBills}>
-            <Ionicons name="card" size={24} color="#007AFF" />
-            <Text style={styles.actionText}>Pay Bills</Text>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSmartPayments}>
+            <Ionicons name="flash" size={24} color="#FF6B35" />
+            <Text style={styles.actionText}>Smart Pay</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton} onPress={handleTopUp}>

@@ -14,6 +14,12 @@ import { connectRedis } from './config/redis';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { authMiddleware } from './middleware/auth';
+import { 
+  deviceFingerprintMiddleware, 
+  riskAssessmentMiddleware, 
+  amlComplianceMiddleware,
+  transactionEncryptionMiddleware 
+} from './middleware/securityMiddleware';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -23,6 +29,8 @@ import paymentRoutes from './routes/payments';
 import routingRoutes from './routes/routing';
 import transactionRoutes from './routes/transactions';
 import networkRoutes from './routes/network';
+import securityRoutes from './routes/security';
+import openfinanceRoutes from './routes/openfinance';
 
 // Import services
 import { NetworkMonitorService } from './services/NetworkMonitorService';
@@ -73,10 +81,19 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/accounts', authMiddleware, accountRoutes);
-app.use('/api/payments', authMiddleware, paymentRoutes);
+app.use('/api/payments', 
+  authMiddleware, 
+  deviceFingerprintMiddleware, 
+  riskAssessmentMiddleware, 
+  amlComplianceMiddleware,
+  transactionEncryptionMiddleware,
+  paymentRoutes
+);
 app.use('/api/routing', authMiddleware, routingRoutes);
 app.use('/api/transactions', authMiddleware, transactionRoutes);
 app.use('/api/network', authMiddleware, networkRoutes);
+app.use('/api/security', authMiddleware, securityRoutes);
+app.use('/api/openfinance', authMiddleware, openfinanceRoutes);
 
 // Error handling
 app.use(notFoundHandler);
